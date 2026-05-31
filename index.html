@@ -2,7 +2,10 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#05010f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>宇宙テトリス</title>
 <style>
   :root{
@@ -19,8 +22,9 @@
     color:var(--txt);
     font-family:"Trebuchet MS","Segoe UI",sans-serif;
     display:flex;align-items:center;justify-content:center;
-    min-height:100vh;overflow:hidden;
+    min-height:100vh;min-height:100dvh;overflow:hidden;
     -webkit-user-select:none;user-select:none;
+    -webkit-tap-highlight-color:transparent;touch-action:manipulation;
   }
   /* subtle moving grid floor */
   body::before{
@@ -29,7 +33,7 @@
                      linear-gradient(90deg, transparent 95%, rgba(255,43,214,.06) 95%);
     background-size:40px 40px;mask-image:linear-gradient(180deg, transparent, #000 70%);
   }
-  .wrap{position:relative;z-index:1;display:flex;gap:22px;align-items:flex-start;padding:18px;}
+  .wrap{position:relative;z-index:1;display:flex;gap:22px;align-items:flex-start;padding:18px;max-width:100%;}
   .title{
     text-align:center;margin-bottom:10px;
     font-weight:800;letter-spacing:6px;font-size:30px;
@@ -41,7 +45,7 @@
     border:2px solid var(--purple);
     border-radius:8px;
     box-shadow:0 0 18px rgba(157,75,255,.6),inset 0 0 40px rgba(0,240,255,.08);
-    display:block;
+    display:block;max-width:100%;touch-action:none;
   }
   .side{display:flex;flex-direction:column;gap:16px;width:190px;}
   .card{
@@ -70,13 +74,65 @@
   .overlay{
     position:absolute;inset:0;display:flex;flex-direction:column;gap:14px;
     align-items:center;justify-content:center;text-align:center;
-    background:rgba(5,1,18,.78);border-radius:8px;backdrop-filter:blur(2px);z-index:5;
+    background:rgba(5,1,18,.78);border-radius:8px;backdrop-filter:blur(2px);z-index:5;padding:16px;
   }
   .overlay h1{font-size:34px;letter-spacing:4px;color:#fff;
     text-shadow:0 0 10px var(--pink),0 0 26px var(--cyan);}
-  .overlay p{color:#bcd0ff;font-size:13px;max-width:240px;line-height:1.7;}
+  .overlay p{color:#bcd0ff;font-size:13px;max-width:260px;line-height:1.7;}
   .hidden{display:none!important;}
   .badge{font-size:10px;color:#6f7bb0;letter-spacing:2px;text-align:center;margin-top:6px;}
+
+  /* on-screen touch controls (mobile only) */
+  .touch{display:none;}
+  .tbtn{
+    -webkit-user-select:none;user-select:none;cursor:pointer;touch-action:none;
+    border:1px solid var(--line);border-radius:14px;color:var(--txt);
+    background:linear-gradient(180deg,rgba(40,22,90,.7),rgba(20,10,50,.7));
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-size:22px;font-weight:bold;box-shadow:0 0 14px rgba(80,40,180,.3);
+  }
+  .tbtn:active{border-color:var(--cyan);box-shadow:0 0 18px rgba(0,240,255,.55);
+    background:linear-gradient(180deg,rgba(60,32,120,.9),rgba(30,16,70,.9));}
+  .tbtn small{font-size:10px;letter-spacing:1px;opacity:.8;margin-top:1px;}
+
+  /* ---------------- responsive (phones / narrow) ---------------- */
+  @media (max-width:780px){
+    body{align-items:stretch;}
+    .wrap{
+      flex-direction:column;align-items:center;gap:6px;padding:5px;
+      width:100%;height:100dvh;
+    }
+    .stage{width:100%;display:flex;flex-direction:column;align-items:center;order:1;}
+    .title{font-size:17px;letter-spacing:3px;margin-bottom:3px;}
+    /* compact single-row HUD on top */
+    .side{
+      flex-direction:row;flex-wrap:nowrap;width:100%;gap:6px;
+      justify-content:center;align-items:stretch;order:0;
+    }
+    .side .card{
+      flex:1 1 0;padding:5px 6px;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;min-width:0;
+    }
+    .side .card h2{font-size:9px;letter-spacing:1px;margin-bottom:2px;}
+    .side .card.music-card{display:none;}   /* music/sfx toggles off-screen on phones */
+    .side .card.keys-card{display:none;}     /* hide keyboard hints on phones */
+    .score-card .stat{font-size:13px;}
+    .score-card .stat small{font-size:9px;letter-spacing:1px;}
+    .mini{max-height:34px;width:auto;}
+    .touch{
+      display:grid;order:2;width:100%;max-width:480px;gap:7px;
+      grid-template-columns:repeat(4,1fr);
+      padding:0 2px env(safe-area-inset-bottom,6px);
+    }
+    .tbtn{height:52px;}
+    .tbtn.wide{grid-column:span 2;}
+  }
+  @media (max-width:780px) and (max-height:680px){
+    .tbtn{height:44px;font-size:18px;}
+    .side .card{padding:4px 6px;}
+    .mini{max-height:28px;}
+    .title{font-size:15px;margin-bottom:2px;}
+  }
 </style>
 </head>
 <body>
@@ -86,17 +142,17 @@
     <canvas id="board" width="300" height="600"></canvas>
     <div id="overlay" class="overlay">
       <h1>宇宙テトリス</h1>
-      <p>矢印キーで移動・回転、スペースでハードドロップ。<br>音楽つきスペース・テトリス。</p>
+      <p>スマホ：下のボタンで操作（盤面タップ＝回転 / スワイプ移動）。<br>PC：矢印キーで移動・回転、スペースでハードドロップ。</p>
       <div class="btn" id="startBtn">▶ START</div>
-      <div class="badge">click START to enable sound</div>
+      <div class="badge">タップでサウンドON</div>
     </div>
   </div>
 
   <div class="side">
-    <div class="card">
+    <div class="card score-card">
       <h2>Score</h2>
       <div class="stat"><span id="score">0</span></div>
-      <div style="height:10px"></div>
+      <div style="height:6px"></div>
       <div class="stat"><small>LINES</small><span id="lines">0</span></div>
       <div class="stat"><small>LEVEL</small><span id="level">1</span></div>
       <div class="stat"><small>BEST</small><span id="best">0</span></div>
@@ -112,13 +168,13 @@
       <canvas id="hold" class="mini" width="150" height="90"></canvas>
     </div>
 
-    <div class="card">
+    <div class="card music-card">
       <div class="toggle"><span>♪ MUSIC</span><span class="btn" id="musicBtn" style="padding:3px 12px">ON</span></div>
       <div style="height:8px"></div>
       <div class="toggle"><span>🔊 SFX</span><span class="btn" id="sfxBtn" style="padding:3px 12px">ON</span></div>
     </div>
 
-    <div class="card">
+    <div class="card keys-card">
       <h2>Keys</h2>
       <div class="keys">
         <div><b>← →</b>移動</div>
@@ -131,13 +187,24 @@
       </div>
     </div>
   </div>
+
+  <!-- mobile touch controls -->
+  <div class="touch" id="touch">
+    <div class="tbtn" data-act="left">◀</div>
+    <div class="tbtn" data-act="rotate">⟳<small>回転</small></div>
+    <div class="tbtn" data-act="hold">⇄<small>HOLD</small></div>
+    <div class="tbtn" data-act="right">▶</div>
+    <div class="tbtn wide" data-act="soft">▼<small>ソフト</small></div>
+    <div class="tbtn wide" data-act="hard">⤓<small>ハード</small></div>
+  </div>
 </div>
 
 <script>
 /* ============================================================
-   NEON TETRIS  — single-file, no dependencies
-   Graphics: canvas neon rendering (optional images/background.png)
+   宇宙テトリス  — single-file, no dependencies
+   Graphics: canvas neon rendering (optional background.png)
    Audio: 8-bit chiptune (Korobeiniki) + SFX via Web Audio API
+   Mobile: responsive scaling, touch buttons, swipe, audio unlock
    ============================================================ */
 (() => {
   const COLS = 10, ROWS = 20, CELL = 30;
@@ -145,6 +212,7 @@
   const ctx = board.getContext('2d');
   const nextCv = document.getElementById('next'), nctx = nextCv.getContext('2d');
   const holdCv = document.getElementById('hold'), hctx = holdCv.getContext('2d');
+  const touchPad = document.getElementById('touch');
 
   // --- optional AI background image ---
   const bgImg = new Image(); let bgReady = false;
@@ -152,7 +220,7 @@
   bgImg.onerror = () => bgReady = false;
   bgImg.src = 'background.png';
 
-  // --- tetromino definitions (SRS-style 4x4 / 3x3 matrices) ---
+  // --- tetromino definitions ---
   const SHAPES = {
     I:[[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
     J:[[1,0,0],[1,1,1],[0,0,0]],
@@ -229,14 +297,12 @@
       c.strokeRect(x+1,y+1,s-2,s-2);
       c.restore(); return;
     }
-    // glow
     c.shadowColor = color; c.shadowBlur = size*0.55;
     const grad = c.createLinearGradient(x,y,x+s,y+s);
     grad.addColorStop(0, color);
     grad.addColorStop(1, shade(color,-40));
     c.fillStyle = grad;
     c.fillRect(x,y,s,s);
-    // inner highlight
     c.shadowBlur = 0;
     c.fillStyle = 'rgba(255,255,255,0.30)';
     c.fillRect(x, y, s, Math.max(2,s*0.18));
@@ -255,11 +321,9 @@
   }
 
   function draw(){
-    // background
     ctx.clearRect(0,0,board.width,board.height);
     if(bgReady){
       ctx.globalAlpha=0.92; ctx.drawImage(bgImg,0,0,board.width,board.height); ctx.globalAlpha=1;
-      // darken center slightly so falling blocks stay readable
       const og=ctx.createRadialGradient(board.width/2,board.height/2,40,board.width/2,board.height/2,board.height/1.6);
       og.addColorStop(0,'rgba(2,1,12,.55)'); og.addColorStop(1,'rgba(2,1,12,0)');
       ctx.fillStyle=og; ctx.fillRect(0,0,board.width,board.height);
@@ -268,25 +332,20 @@
       g.addColorStop(0,'rgba(20,4,55,.5)'); g.addColorStop(1,'rgba(40,0,40,.5)');
       ctx.fillStyle=g; ctx.fillRect(0,0,board.width,board.height);
     }
-    // grid lines
     ctx.strokeStyle='rgba(0,240,255,.07)'; ctx.lineWidth=1;
     for(let x=0;x<=COLS;x++){ctx.beginPath();ctx.moveTo(x*CELL,0);ctx.lineTo(x*CELL,board.height);ctx.stroke();}
     for(let y=0;y<=ROWS;y++){ctx.beginPath();ctx.moveTo(0,y*CELL);ctx.lineTo(board.width,y*CELL);ctx.stroke();}
 
-    // settled blocks
     for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
       if(grid[r][c]) drawCell(ctx, c*CELL, r*CELL, grid[r][c], CELL);
     }
 
     if(cur){
-      // ghost
-      const ghost={...cur, m:cur.m, y:cur.y};
-      let gy=cur.y; const test={...cur};
+      const test={...cur};
       while(!collide(grid,{...cur,y:test.y+1})) test.y++;
       cur.m.forEach((row,r)=>row.forEach((v,c)=>{
         if(v) drawCell(ctx,(cur.x+c)*CELL,(test.y+r)*CELL,cur.type,CELL,1,true);
       }));
-      // current
       cur.m.forEach((row,r)=>row.forEach((v,c)=>{
         if(v){ const py=(cur.y+r); if(py>=0) drawCell(ctx,(cur.x+c)*CELL,py*CELL,cur.type,CELL); }
       }));
@@ -405,9 +464,10 @@
     running=true; lastTime=performance.now(); dropCounter=0;
     Music.start();
     cancelAnimationFrame(raf); raf=requestAnimationFrame(loop);
+    fitBoard();
   }
 
-  // --- input ---
+  // --- keyboard input ---
   document.addEventListener('keydown',e=>{
     if(!running){ return; }
     if(e.key==='p'||e.key==='P'){ paused=!paused; if(paused)Music.pause();else Music.resume(); return; }
@@ -424,22 +484,126 @@
     draw();
   });
 
+  // --- touch button input (auto-repeat for move/soft) ---
+  function doAction(act){
+    if(!running||paused||gameOver) return;
+    AudioEngine.unlock();
+    switch(act){
+      case 'left': move(-1); break;
+      case 'right': move(1); break;
+      case 'soft': softDrop(); break;
+      case 'hard': hardDrop(); break;
+      case 'rotate': doRotate(1); break;
+      case 'hold': hold(); break;
+    }
+    draw();
+  }
+  let repTimer=null;
+  function bindBtn(el){
+    const act=el.dataset.act;
+    const press=(e)=>{
+      e.preventDefault();
+      doAction(act);
+      if(act==='left'||act==='right'||act==='soft'){
+        clearInterval(repTimer);
+        repTimer=setInterval(()=>doAction(act),110);
+      }
+    };
+    const release=(e)=>{ if(e&&e.cancelable)e.preventDefault(); clearInterval(repTimer); repTimer=null; };
+    el.addEventListener('touchstart',press,{passive:false});
+    el.addEventListener('touchend',release,{passive:false});
+    el.addEventListener('touchcancel',release,{passive:false});
+    el.addEventListener('mousedown',press);
+    el.addEventListener('mouseup',release);
+    el.addEventListener('mouseleave',release);
+  }
+  touchPad.querySelectorAll('.tbtn').forEach(bindBtn);
+
+  // --- swipe on the board (tap=rotate, horizontal=move, down=soft) ---
+  let sx=0,sy=0,st=0,moved=false;
+  board.addEventListener('touchstart',e=>{
+    const t=e.touches[0]; sx=t.clientX; sy=t.clientY; st=Date.now(); moved=false;
+    AudioEngine.unlock();
+  },{passive:true});
+  board.addEventListener('touchmove',e=>{
+    if(!running||paused||gameOver) return;
+    const t=e.touches[0]; const dx=t.clientX-sx, dy=t.clientY-sy; const unit=26;
+    if(Math.abs(dx)>Math.abs(dy)){
+      if(Math.abs(dx)>unit){ move(dx>0?1:-1); sx=t.clientX; moved=true; draw(); if(e.cancelable)e.preventDefault(); }
+    } else {
+      if(dy>unit){ softDrop(); sy=t.clientY; moved=true; draw(); if(e.cancelable)e.preventDefault(); }
+    }
+  },{passive:false});
+  board.addEventListener('touchend',e=>{
+    if(!running||paused||gameOver) return;
+    const dt=Date.now()-st;
+    if(!moved && dt<250){ doRotate(1); draw(); }
+  },{passive:true});
+
   document.getElementById('startBtn').addEventListener('click',()=>{ AudioEngine.unlock(); startGame(); });
+
+  // unlock audio on first touch anywhere (extra safety for iOS)
+  document.addEventListener('touchstart',function once(){ AudioEngine.unlock(); document.removeEventListener('touchstart',once); },{passive:true});
+
+  // --- responsive board sizing (CSS scale; logical canvas stays 300x600) ---
+  const titleEl=document.querySelector('.title');
+  const sideEl=document.querySelector('.side');
+  function viewH(){ return (window.visualViewport&&window.visualViewport.height)||window.innerHeight; }
+  function fitBoard(){
+    const isMobile=window.matchMedia('(max-width:780px)').matches;
+    const vh=viewH();
+    let maxW, maxH;
+    if(isMobile){
+      maxW=window.innerWidth-12;
+      // measure the real space taken by HUD row + touchpad + title, then give the rest to the board
+      const titleH=titleEl?titleEl.offsetHeight:24;
+      const sideH=sideEl?sideEl.offsetHeight:60;
+      const touchH=touchPad?touchPad.offsetHeight:120;
+      maxH=vh-titleH-sideH-touchH-34;   // 34 = gaps/padding/safety
+    } else {
+      maxW=window.innerWidth-260;
+      maxH=vh-90;
+    }
+    let h=Math.min(maxH, maxW*2);
+    if(h<180) h=180;
+    let w=h/2;
+    if(w>maxW){ w=maxW; h=w*2; }
+    board.style.width=Math.floor(w)+'px';
+    board.style.height=Math.floor(h)+'px';
+  }
+  // run now and again after layout/toolbars settle
+  function fitSoon(){ fitBoard(); requestAnimationFrame(fitBoard); setTimeout(fitBoard,120); setTimeout(fitBoard,400); }
+  window.addEventListener('resize',fitBoard);
+  window.addEventListener('load',fitSoon);
+  if(window.visualViewport){ window.visualViewport.addEventListener('resize',fitBoard); }
+  window.addEventListener('orientationchange',()=>setTimeout(fitSoon,250));
 
   /* ===================== AUDIO ENGINE ===================== */
   const AudioEngine = (()=>{
     let ac=null;
     function ctx(){ if(!ac) ac=new (window.AudioContext||window.webkitAudioContext)(); return ac; }
-    function unlock(){ const c=ctx(); if(c.state==='suspended') c.resume(); }
+    function unlock(){
+      const c=ctx();
+      if(c.state==='suspended') c.resume();
+      // iOS Safari sometimes needs a silent tick to fully unlock
+      if(!unlock._kicked){
+        unlock._kicked=true;
+        try{ const o=c.createOscillator(),g=c.createGain();
+          g.gain.value=0.0001; o.connect(g).connect(c.destination);
+          o.start(); o.stop(c.currentTime+0.02);
+        }catch(e){}
+      }
+    }
     return {ctx,unlock};
   })();
 
-  // ---- SFX (square/triangle blips) ----
+  // ---- SFX ----
   const SFX = (()=>{
     let on=true;
     function blip(freq,dur,type='square',vol=0.18){
       if(!on) return;
-      const c=AudioEngine.ctx(); const t=c.currentTime;
+      const c=AudioEngine.ctx(); if(c.state!=='running') return;
+      const t=c.currentTime;
       const o=c.createOscillator(), g=c.createGain();
       o.type=type; o.frequency.value=freq;
       g.gain.setValueAtTime(vol,t);
@@ -455,29 +619,27 @@
     };
   })();
 
-  // ---- Chiptune music: Korobeiniki (the Tetris theme, trad.) ----
+  // ---- Chiptune music: Korobeiniki ----
   const Music = (()=>{
-    let on=true, timer=null, idx=0, startT=0, gain=null, playing=false;
-    // note: [frequency Hz (0=rest), beats]
+    let on=true, timer=null, gain=null, playing=false;
     const N={E5:659.25,B4:493.88,C5:523.25,D5:587.33,A4:440,Gs4:415.30,F5:698.46,
-             G4:392,E4:329.63,F4:349.23,A5:880,Gs5:830.61,B5:987.77,C6:1046.5,D6:1174.66};
-    // melody (eighth-note grid, value = beats)
+             G5:783.99,G4:392,E4:329.63,F4:349.23,A5:880,Gs5:830.61,B5:987.77,C6:1046.5,D6:1174.66};
     const MEL=[
       [N.E5,1],[N.B4,.5],[N.C5,.5],[N.D5,1],[N.C5,.5],[N.B4,.5],
       [N.A4,1],[N.A4,.5],[N.C5,.5],[N.E5,1],[N.D5,.5],[N.C5,.5],
       [N.B4,1.5],[N.C5,.5],[N.D5,1],[N.E5,1],
       [N.C5,1],[N.A4,1],[N.A4,1],[0,1],
-      [N.D5,1.5],[N.F5,.5],[N.A5,1],[N.G5||783.99,.5],[N.F5,.5],
+      [N.D5,1.5],[N.F5,.5],[N.A5,1],[N.G5,.5],[N.F5,.5],
       [N.E5,1.5],[N.C5,.5],[N.E5,1],[N.D5,.5],[N.C5,.5],
       [N.B4,1],[N.B4,.5],[N.C5,.5],[N.D5,1],[N.E5,1],
       [N.C5,1],[N.A4,1],[N.A4,1],[0,1],
     ];
-    const BEAT=0.32; // seconds per beat
+    const BEAT=0.32;
     function scheduleLoop(){
       const c=AudioEngine.ctx();
+      if(c.state!=='running'){ timer=setTimeout(scheduleLoop,200); return; }
       if(!gain){ gain=c.createGain(); gain.gain.value=0.14; gain.connect(c.destination); }
-      let t=c.currentTime+0.05; startT=t;
-      // schedule whole melody then reloop
+      let t=c.currentTime+0.05;
       function playOnce(t0){
         let cursor=t0;
         MEL.forEach(([f,b])=>{
@@ -490,7 +652,6 @@
             g.gain.exponentialRampToValueAtTime(0.04,cursor+dur*0.9);
             g.gain.exponentialRampToValueAtTime(0.0001,cursor+dur);
             o.connect(g).connect(gain); o.start(cursor); o.stop(cursor+dur);
-            // bass an octave+fifth below, triangle
             const ob=c.createOscillator(), gb=c.createGain();
             ob.type='triangle'; ob.frequency.value=f/2;
             gb.gain.setValueAtTime(0.0001,cursor);
@@ -507,7 +668,7 @@
       timer=setTimeout(()=>{ if(playing&&on) scheduleLoop(); }, totalMs-60);
     }
     return {
-      start(){ if(!on)return; playing=true; AudioEngine.unlock(); clearTimeout(timer); scheduleLoop(); },
+      start(){ if(!on)return; playing=true; AudioEngine.unlock(); clearTimeout(timer); if(gain)gain.gain.value=0.14; scheduleLoop(); },
       stop(){ playing=false; clearTimeout(timer); if(gain){try{gain.gain.value=0;}catch(e){}} },
       pause(){ playing=false; clearTimeout(timer); if(gain) gain.gain.value=0; },
       resume(){ if(!on)return; if(gain) gain.gain.value=0.14; playing=true; scheduleLoop(); },
@@ -522,7 +683,7 @@
   sBtn.addEventListener('click',()=>{ const v=!SFX.on; SFX.toggle(v); sBtn.textContent=v?'ON':'OFF'; sBtn.style.opacity=v?1:.5; });
 
   // initial static draw behind overlay
-  grid=newGrid(); draw();
+  grid=newGrid(); draw(); fitSoon();
 })();
 </script>
 </body>
