@@ -547,19 +547,21 @@
 
   // --- responsive board sizing (CSS scale; logical canvas stays 300x600) ---
   const titleEl=document.querySelector('.title');
-  const sideEl=document.querySelector('.side');
-  function viewH(){ return (window.visualViewport&&window.visualViewport.height)||window.innerHeight; }
+  // use the SMALLER of innerHeight / visualViewport (visualViewport can over-report on mobile)
+  function viewH(){
+    const vv=window.visualViewport?window.visualViewport.height:Infinity;
+    return Math.min(window.innerHeight||Infinity, vv);
+  }
   function fitBoard(){
     const isMobile=window.matchMedia('(max-width:780px)').matches;
     const vh=viewH();
     let maxW, maxH;
     if(isMobile){
       maxW=window.innerWidth-12;
-      // measure the real space taken by HUD row + touchpad + title, then give the rest to the board
-      const titleH=titleEl?titleEl.offsetHeight:24;
-      const sideH=sideEl?sideEl.offsetHeight:60;
-      const touchH=touchPad?touchPad.offsetHeight:120;
-      maxH=vh-titleH-sideH-touchH-34;   // 34 = gaps/padding/safety
+      const titleH=titleEl?titleEl.offsetHeight:30;
+      const touchH=touchPad?touchPad.offsetHeight:118;
+      const hudH=100;        // fixed allowance for the top HUD row (measures unreliably)
+      maxH=vh-titleH-touchH-hudH-26;   // 26 = gaps/padding/safety
     } else {
       maxW=window.innerWidth-260;
       maxH=vh-90;
